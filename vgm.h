@@ -221,10 +221,11 @@ bool opna_pcm_write(int serial_fd, FILE *input_fp, uint8_t type, uint32_t size)
 	//fwrite(adpcm, 1, adpcm_size, stdout);
 
 	/* sequence from YM2608 application manual */
-	spfm_send(serial_fd, OPNA_SLOT_NUM, 0x01, 0x10, 0x13);
-	spfm_send(serial_fd, OPNA_SLOT_NUM, 0x01, 0x10, 0x80);
-	spfm_send(serial_fd, OPNA_SLOT_NUM, 0x01, 0x00, 0x60);
-	spfm_send(serial_fd, OPNA_SLOT_NUM, 0x01, 0x01, 0x02);
+	start_addr >>= 2; /* minimum resolution of addressing becomes the unit of 32bit(4byte). */
+	stop_addr >>= 2;
+
+	spfm_send(serial_fd, OPNA_SLOT_NUM, 0x01, 0x00, 0x68);
+	spfm_send(serial_fd, OPNA_SLOT_NUM, 0x01, 0x01, 0x00);
 
 	spfm_send(serial_fd, OPNA_SLOT_NUM, 0x01, 0x02, low_byte(start_addr));
 	spfm_send(serial_fd, OPNA_SLOT_NUM, 0x01, 0x03, high_byte(start_addr));
@@ -232,18 +233,15 @@ bool opna_pcm_write(int serial_fd, FILE *input_fp, uint8_t type, uint32_t size)
 	spfm_send(serial_fd, OPNA_SLOT_NUM, 0x01, 0x04, low_byte(stop_addr));
 	spfm_send(serial_fd, OPNA_SLOT_NUM, 0x01, 0x05, high_byte(stop_addr));
 
-	spfm_send(serial_fd, OPNA_SLOT_NUM, 0x01, 0x0C, low_byte(stop_addr));
-	spfm_send(serial_fd, OPNA_SLOT_NUM, 0x01, 0x0D, high_byte(stop_addr));
+	spfm_send(serial_fd, OPNA_SLOT_NUM, 0x01, 0x0C, 0xFF);
+	spfm_send(serial_fd, OPNA_SLOT_NUM, 0x01, 0x0D, 0xFF);
 
 	count = 0;
 	while (count < adpcm_size) {
 		spfm_send(serial_fd, OPNA_SLOT_NUM, 0x01, 0x08, adpcm[count]);
-		spfm_send(serial_fd, OPNA_SLOT_NUM, 0x01, 0x10, 0x1B);
-		spfm_send(serial_fd, OPNA_SLOT_NUM, 0x01, 0x10, 0x13);
 		count++;
 	}
-	spfm_send(serial_fd, OPNA_SLOT_NUM, 0x01, 0x00, 0x00);
-	spfm_send(serial_fd, OPNA_SLOT_NUM, 0x01, 0x10, 0x80);
+	spfm_send(serial_fd, OPNA_SLOT_NUM, 0x01, 0x00, 0x01);
 
 	return true;
 }
