@@ -1,5 +1,6 @@
 /* See LICENSE for licence details. */
 #define _XOPEN_SOURCE 600
+#define _BSD_SOURCE
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -11,6 +12,7 @@
 #include <string.h>
 #include <sys/select.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <termios.h>
 #include <unistd.h>
 

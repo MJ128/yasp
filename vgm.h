@@ -143,7 +143,7 @@ bool vgm_parse_header(FILE *fp, struct vgm_header_t *header)
 
 void vgm_wait(int nsync)
 {
-	usleep((double) 1.0 / VGM_SAMPLE_RATE * nsync * 1000000);
+	delay_microseconds((double) 1.0 / VGM_SAMPLE_RATE * nsync * 1000000);
 }
 
 /*
