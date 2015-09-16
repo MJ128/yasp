@@ -189,7 +189,7 @@ bool s98_parse_header(FILE *fp, struct s98_header_t *header)
 void s98_wait(double step, long nsync)
 {
 	logging(DEBUG, "step:%lf nsync:%ld\n", step, nsync);
-	usleep(step * nsync * 1000000);
+	delay_microseconds(step * nsync * 1000000);
 }
 
 

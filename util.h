@@ -91,3 +91,18 @@ uint8_t high_byte(uint32_t value)
 {
 	return ((value >> 8) & 0xFF);
 }
+
+void delay_microseconds(uint32_t microseconds)
+{
+	struct timeval now, lapse, end;
+
+	gettimeofday(&now, NULL);
+	lapse.tv_sec = microseconds / 1000000;
+	lapse.tv_usec = microseconds % 1000000;
+	timeradd(&now, &lapse, &end);
+
+	while (timercmp(&now, &end, <))
+	{
+		gettimeofday(&now, NULL);
+	}
+}
