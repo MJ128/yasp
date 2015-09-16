@@ -236,3 +236,39 @@ void spfm_send(int fd, uint8_t slot, uint8_t port, uint8_t addr, uint8_t data)
 	logging(DEBUG, "slot:0x%.2X port:0x%.2X addr:0x%.2X data:0x%.2X\n",
 		slot, port, addr, data);
 }
+
+void OPNA_reset(int fd, uint8_t slot)
+{
+	spfm_send(fd, slot, 0, 0x29, 0x80); // OPNA mode.
+	spfm_send(fd, slot, 0, 0xB4, 0xC0);
+	spfm_send(fd, slot, 0, 0xB5, 0xC0);
+	spfm_send(fd, slot, 0, 0xB6, 0xC0);
+	spfm_send(fd, slot, 1, 0xB4, 0xC0);
+	spfm_send(fd, slot, 1, 0xB5, 0xC0);
+	spfm_send(fd, slot, 1, 0xB6, 0xC0);
+	for (uint8_t i = 0x40; i <= 0x4E; ++i)
+	{
+		spfm_send(fd, slot, 0, i, 0x7F);
+		spfm_send(fd, slot, 1, i, 0x7F);
+	}
+	for (uint8_t i = 0x80; i <= 0x8E; ++i)
+	{
+		spfm_send(fd, slot, 0, i, 0x0F);
+		spfm_send(fd, slot, 1, i, 0x0F);
+	}
+	for (uint8_t i = 0; i < 6; i++)
+	{
+		spfm_send(fd, slot, 0, 0x28, i);
+	}
+	spfm_send(fd, slot, 1, 0x02, 0x00);
+	spfm_send(fd, slot, 1, 0x03, 0x00);
+	spfm_send(fd, slot, 1, 0x04, 0x00);
+	spfm_send(fd, slot, 1, 0x05, 0x00);
+	//spfm_send(fd, slot, 1, 0x01, 0xC0);
+	spfm_send(fd, slot, 1, 0x00, 0xB0);
+
+	spfm_send(fd, slot, 0, 0x07, 0x3F);
+	spfm_send(fd, slot, 0, 0x08, 0x00);
+	spfm_send(fd, slot, 0, 0x09, 0x00);
+	spfm_send(fd, slot, 0, 0x0A, 0x00);
+}
