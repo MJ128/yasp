@@ -213,12 +213,16 @@ bool s98_play(int serial_fd, FILE *input_fp)
 	else
 		step = (double) S98_DEFAULT_NUMERATOR / S98_DEFAULT_DENOMINATOR;
 
-	if (header.device[0].type == S98_YM2608)
+	if (header.device[0].type == S98_YM2608) {
 		slot = OPNA_SLOT_NUM;
-	else if (header.device[0].type == S98_YM2151)
+		OPNA_reset(serial_fd, slot);
+	}
+	else if (header.device[0].type == S98_YM2151) {
 		slot = OPM_SLOT_NUM;
-	else /* unknown chip type */
+	}
+	else { /* unknown chip type */
 		slot = 0x00;
+	}
 
 	logging(DEBUG, "1 step: %lf (sec)\n", step);
 
