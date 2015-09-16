@@ -246,7 +246,7 @@ bool s98_play(int serial_fd, FILE *input_fp)
 			return true;
 		case 0xFE: /* n sync */
 			nsync = read_variable_length_7bit_le(input_fp);
-			s98_wait(step, nsync);
+			s98_wait(step, nsync + 2);
 			break;
 		case 0xFF: /* 1 sync */
 			s98_wait(step, 1);
