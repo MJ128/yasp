@@ -222,16 +222,14 @@ void OPNA_register_info(uint8_t port, uint8_t addr)
 
 void spfm_send(int fd, uint8_t slot, uint8_t port, uint8_t addr, uint8_t data)
 {
-	send_data(fd, &slot, 1);
+	uint8_t buf[BUFSIZE];
+	uint8_t* p = &buf[0];
 
-	if (port == 0x00)
-		send_data(fd, &(uint8_t){0x00}, 1);
-	else /* OPNA extend: A1 bit on */
-		send_data(fd, &(uint8_t){0x02}, 1);
-
-	send_data(fd, &addr, 1);
-
-	send_data(fd, &data, 1);
+	*p++ = 0x00 | (slot & 0xF);
+	*p++ = 0x00 | ((port & 0x1) << 1);
+	*p++ = addr;
+	*p++ = data;
+	send_data(fd, buf, 4);
 
 	logging(DEBUG, "slot:0x%.2X port:0x%.2X addr:0x%.2X data:0x%.2X\n",
 		slot, port, addr, data);
