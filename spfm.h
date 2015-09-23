@@ -224,12 +224,16 @@ void spfm_send(int fd, uint8_t slot, uint8_t port, uint8_t addr, uint8_t data)
 {
 	uint8_t buf[BUFSIZE];
 	uint8_t* p = &buf[0];
+	const int wait_count = 13;
 
 	*p++ = 0x00 | (slot & 0xF);
 	*p++ = 0x00 | ((port & 0x1) << 1);
 	*p++ = addr;
 	*p++ = data;
-	send_data(fd, buf, 4);
+	for (int i = 0; i < wait_count; ++i) {
+		*p++ = 0x80;
+	}
+	send_data(fd, buf, 4 + wait_count);
 
 	logging(DEBUG, "slot:0x%.2X port:0x%.2X addr:0x%.2X data:0x%.2X\n",
 		slot, port, addr, data);
@@ -244,18 +248,15 @@ void OPNA_reset(int fd, uint8_t slot)
 	spfm_send(fd, slot, 1, 0xB4, 0xC0);
 	spfm_send(fd, slot, 1, 0xB5, 0xC0);
 	spfm_send(fd, slot, 1, 0xB6, 0xC0);
-	for (uint8_t i = 0x40; i <= 0x4E; ++i)
-	{
+	for (uint8_t i = 0x40; i <= 0x4E; ++i) {
 		spfm_send(fd, slot, 0, i, 0x7F);
 		spfm_send(fd, slot, 1, i, 0x7F);
 	}
-	for (uint8_t i = 0x80; i <= 0x8E; ++i)
-	{
+	for (uint8_t i = 0x80; i <= 0x8E; ++i) {
 		spfm_send(fd, slot, 0, i, 0x0F);
 		spfm_send(fd, slot, 1, i, 0x0F);
 	}
-	for (uint8_t i = 0; i < 6; i++)
-	{
+	for (uint8_t i = 0; i < 6; i++) {
 		spfm_send(fd, slot, 0, 0x28, i);
 	}
 	spfm_send(fd, slot, 1, 0x02, 0x00);

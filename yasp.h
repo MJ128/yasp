@@ -18,11 +18,12 @@
 
 enum misc_t {
 	BITS_PER_BYTE  = 8,
-	BUFSIZE        = 16,
+	BUFSIZE        = 32,
 	SELECT_TIMEOUT = 15000, /* usec */
 	/* SPFM Light slot: 0x00 or 0x01 */
 	OPM_SLOT_NUM   = 0x00,
 	OPNA_SLOT_NUM  = 0x01,
+	OPL3_SLOT_NUM  = 0xFF,
 };
 
 static const char *serial_dev      = "/dev/ttyUSB0";

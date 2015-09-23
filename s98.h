@@ -195,7 +195,7 @@ void s98_wait(double step, long nsync)
 
 bool s98_play(int serial_fd, FILE *input_fp)
 {
-	uint8_t slot, buf[BUFSIZE], op;
+	uint8_t slots[S98_MAX_DEVICE * 2], buf[BUFSIZE], op;
 	long nsync = 0L;
 	double step;
 	struct s98_header_t header;
@@ -213,16 +213,24 @@ bool s98_play(int serial_fd, FILE *input_fp)
 	else
 		step = (double) S98_DEFAULT_NUMERATOR / S98_DEFAULT_DENOMINATOR;
 
-	if (header.device[0].type == S98_YM2608) {
-		slot = OPNA_SLOT_NUM;
-		OPNA_reset(serial_fd, slot);
-	}
-	else if (header.device[0].type == S98_YM2151) {
-		slot = OPM_SLOT_NUM;
-	}
-	else { /* unknown chip type */
-		slot = 0x00;
-	}
+  memset(slots, 0xFF, sizeof(slots));
+  for (uint32_t i = 0; i < header.device_count; ++i) {
+    switch (header.device[0].type)
+    {
+    case S98_YM2608:
+      slots[i * 2] = slots[i * 2 + 1] = OPNA_SLOT_NUM;
+      OPNA_reset(serial_fd, slots[i * 2]);
+      break;
+    case S98_YM2151:
+      slots[i * 2] = slots[i * 2 + 1] = OPM_SLOT_NUM;
+      break;
+    case S98_YMF262:
+      slots[i * 2] = slots[i * 2 + 1] = OPL3_SLOT_NUM;
+      break;
+    default:
+      break;
+    }
+  }
 
 	logging(DEBUG, "1 step: %lf (sec)\n", step);
 
@@ -235,30 +243,35 @@ bool s98_play(int serial_fd, FILE *input_fp)
 		op = buf[0];
 		logging(DEBUG, "op: 0x%.2X\n", op);
 
-		switch (op) {
-		case 0x00: /* device 1 (normal) */
-		case 0x01: /* device 1 (extended) */
-			if (fread(buf, 1, 2, input_fp) != 2) {
-				logging(ERROR, "couldn't read addr/data byte\n");
-				return false;
-			}
-			spfm_send(serial_fd, slot, op, buf[0], buf[1]);
-			break;
-		/* ignore device2, device3, ... and more */
-		case 0xFD: /* END/LOOP */
-			logging(DEBUG, "end of s98 data\n");
-			return true;
-		case 0xFE: /* n sync */
-			nsync = read_variable_length_7bit_le(input_fp);
-			s98_wait(step, nsync + 2);
-			break;
-		case 0xFF: /* 1 sync */
-			s98_wait(step, 1);
-			break;
-		default:
-			logging(WARN, "unknown S98 command:0x%.2X\n", op);
-			break;
-		}
+    if (op < S98_MAX_DEVICE * 2) {
+      if (fread(buf, 1, 2, input_fp) != 2) {
+        logging(ERROR, "couldn't read addr/data byte\n");
+        return false;
+      }
+      if (slots[op] != 0xFF)
+        spfm_send(serial_fd, slots[op], op, buf[0], buf[1]);
+    }
+    else {
+      switch (op) {
+      case 0xFD: /* END/LOOP */
+        if (header.offset_loop) {
+          fseek(input_fp, header.offset_loop, SEEK_SET);
+          break;
+        }
+        logging(DEBUG, "end of s98 data\n");
+        return true;
+      case 0xFE: /* n sync */
+        nsync = read_variable_length_7bit_le(input_fp);
+        s98_wait(step, nsync + 2);
+        break;
+      case 0xFF: /* 1 sync */
+        s98_wait(step, 1);
+        break;
+      default:
+        logging(WARN, "unknown S98 command:0x%.2X\n", op);
+        break;
+      }
+    }
 	}
 
 	if (catch_sigint)

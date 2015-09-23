@@ -314,6 +314,10 @@ bool vgm_play(int serial_fd, FILE *input_fp)
 				vgm_wait2 = u16_tmp;
 			break;
 		case 0x66: /* end of vgm data */
+      if (header.loop_offset) {
+        fseek(input_fp, header.loop_offset, SEEK_SET);
+        break;
+      }
 			logging(DEBUG, "end of vgm data\n");
 			return true;
 		case 0x67: /* data block */
